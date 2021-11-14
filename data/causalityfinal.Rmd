@@ -1,0 +1,233 @@
+---
+title: "Timeseries project"
+author: "Ritwik,Shubha,Manas,Arkajyoti,Arghamalya"
+date: "10/11/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+####Checking Causality
+```{r cars}
+library(lmtest)
+library(tseries)
+library(forecast)
+library(astsa)
+```
+## For Nifty small cap
+```{r For Nifty small cap}
+rm(list=ls())
+##########wholedataforniftysmallcap#####################
+finaldata=read.csv('timeseries.csv')
+adf.test(finaldata$Close,alternative='stationary')
+ndiffs(finaldata$Close)
+adf.test(finaldata$cases,alternative='stationary')
+ndiffs(finaldata$cases)
+
+```
+##Both are I(2) so we do single differencing
+
+```{r}
+y=diff(finaldata$cases,lag=1)
+x=diff(finaldata$Close,lag=1)
+test1=lm(x~y)
+res1=test1$residuals
+adf.test(res1,alternative='stationary')
+```
+###Checking causal relationship
+
+```{r}
+grangertest(diff(finaldata$Close,lag=2)~diff(finaldata$cases,lag=2),order=1)
+grangertest(diff(finaldata$Close,lag=2)~diff(finaldata$cases,lag=2),order=2)
+grangertest(diff(finaldata$Close,lag=2)~diff(finaldata$cases,lag=2),order=3)
+grangertest(diff(finaldata$Close,lag=2)~diff(finaldata$cases,lag=2),order=4)
+```
+#For Nifty50
+```{r}
+finaldata1=read.csv('timeseries1.csv')
+adf.test(finaldata1$Close,alternative='stationary')
+ndiffs(finaldata1$Close)
+adf.test(finaldata1$cases,alternative='stationary')
+ndiffs(finaldata1$cases)
+```
+```{r}
+y1=diff(finaldata1$cases,lag=1)
+x1=diff(finaldata1$Close,lag=1)
+test2=lm(x1~y1)
+res2=test2$residuals
+adf.test(res2,alternative='stationary')
+```
+```{r}
+grangertest(diff(x1)~diff(y1),order=1)
+grangertest(diff(x1)~diff(y1),order=2)
+```
+#Firstlockdownforniftysmallcap
+```{r}
+firstlockdown=finaldata[22:62,]
+adf.test(firstlockdown$Close,alternative='stationary')
+ndiffs(firstlockdown$Close)
+adf.test(firstlockdown$cases,alternative='stationary')
+ndiffs(firstlockdown$cases)
+```
+
+```{r}
+x2=diff(firstlockdown$Close,lag=1)
+x22=diff(firstlockdown$Close,lag=2)
+y2=firstlockdown$cases[-1]
+y22=diff(firstlockdown$cases,lag=1)
+test3=lm(x2~y2)
+res3=test3$residuals
+adf.test(res3,alternative='stationary',k=1)
+```
+```{r}
+grangertest(x22~y22[-1],order=1)
+```
+#Firstwaveforniftysmallcap
+```{r}
+firstwave=finaldata[110:228,]
+adf.test(firstwave$Close,alternative='stationary')
+ndiffs(firstwave$Close)
+adf.test(firstwave$cases,alternative='stationary')
+ndiffs(firstwave$cases)
+```
+```{r}
+x3=firstwave$Close[-1]
+y3=diff(firstwave$cases,lag=1)
+test4=lm(x3~y3)
+res4=test4$residuals
+adf.test(res4,alternative='stationary')
+adf.test(diff(firstwave$cases,lag=1),alternative='stationary')
+adf.test(diff(firstwave$Close,lag=1),alternative='stationary')
+##here cointegration test failed
+```
+###Checking causality
+
+```{r}
+grangertest(diff(firstwave$Close,lag=1)~diff(firstwave$cases,lag=1),order=1)
+```
+
+
+########First lockdown for nifty50
+
+
+```{r}
+###############3firstlockdownfornifty50##################
+firstlockdownnifty50=finaldata1[22:62,]
+adf.test(firstlockdownnifty50$Close,alternative='stationary')
+ndiffs(firstlockdownnifty50$Close)
+adf.test(firstlockdownnifty50$cases,alternative='stationary')
+ndiffs(firstlockdownnifty50$cases)
+test5=lm(firstlockdownnifty50$Close~firstlockdownnifty50$cases)
+res5=test5$residuals
+adf.test(res5,alternative='stationary')
+
+###Here also the cointegration test failed
+```
+
+
+```{r}
+x5=diff(firstlockdownnifty50$Close,lag=1)
+y5=diff(firstlockdownnifty50$cases,lag=2)
+adf.test(x5,alternative="stationary")
+adf.test(y5,alternative="stationary")
+```
+```{r}
+grangertest(x5[-1]~y5,order=1)
+```
+
+######Firstwave for nifty50
+
+```{r}
+####################firstwavefornifty50
+firstwavenifty50=finaldata1[82:228,]
+adf.test(firstwavenifty50$Close,alternative='stationary')
+ndiffs(firstwavenifty50$Close)
+adf.test(firstwavenifty50$cases,alternative='stationary')
+ndiffs(firstwavenifty50$cases)
+
+```
+```{r}
+x6=firstwavenifty50$Close
+y6=firstwavenifty50$cases
+test7=lm(x6~y6)
+res7=test7$residuals
+adf.test(res7,alternative='stationary')
+###Here also cointegration test failed
+```
+#####checking causality
+
+```{r}
+grangertest(diff(x6,lag=1)~diff(y6,lag=1),order=1)
+grangertest(diff(x6,lag=1)~diff(y6,lag=1),order=2)
+```
+###For niftymidcap
+
+```{r}
+################forniftymidcap######################
+midcap=read.csv('midcapfinal.csv')
+adf.test(midcap$Close,alternative='stationary')
+ndiffs(midcap$Close)
+adf.test(midcap$cases,alternative='stationary')
+ndiffs(midcap$cases)
+```
+
+```{r}
+y88=diff(midcap$cases,lag=1)
+x88=diff(midcap$Close,lag=1)
+test8=lm(x88~y88)
+res8=test8$residuals
+adf.test(res8,alternative='stationary')
+##Here cointegrated but no causation
+```
+```{r}
+grangertest(x88[-1]~diff(y88),order=1)
+```
+
+#####First wave for nifty midcap#######
+
+```{r}
+firstwavemidcap=midcap[82:228,]
+adf.test(firstwavemidcap$Close,alternative='stationary')
+ndiffs(firstwavemidcap$Close)
+adf.test(firstwavemidcap$cases,alternative='stationary')
+ndiffs(firstwavemidcap$cases)
+```
+
+```{r}
+y99=firstwavemidcap$cases
+x99=firstwavemidcap$Close
+test9=lm(x99~y99)
+res9=test9$residuals
+adf.test(res9,alternative='stationary')
+###not cointegrated
+```
+```{r}
+grangertest(diff(x99)~diff(y99),order=1)
+```
+####First lockdown for nifty midcap
+```{r}
+midcap1=midcap[22:62,]
+adf.test(midcap1$Close,alternative='stationary')
+ndiffs(midcap1$Close)
+adf.test(midcap1$cases,alternative='stationary')
+ndiffs(midcap1$cases)
+test5=lm(diff(midcap1$Close)~diff(midcap1$cases))
+res5=test5$residuals
+adf.test(res5,alternative='stationary')
+
+##Not cointegrated
+```
+```{r}
+y10=diff(diff(midcap1$Close))
+x10=diff(midcap1$cases,lag=2)
+adf.test(y10,alternative="stationary")
+adf.test(x10,alternative="stationary")
+grangertest(y10~x10,order=3)
+```
+
+

@@ -1,0 +1,192 @@
+---
+title: "Arima"
+author: "Ritwik,Shubha,Manas,Arkajyoti,Arghamalya"
+date: "14/11/2021"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+###Forecasting
+
+```{r cars}
+library(tseries)
+library(forecast)
+library(foreign)
+library(TSA)
+```
+###For Nifty50
+
+```{r pressure, echo=FALSE}
+rm(list=ls())
+nifty50=read.csv('nifty50.csv') 
+nifty50$Date <- as.Date(nifty50$Date)
+nifty50$Close=as.numeric(as.character(nifty50$Close))
+```
+
+```{r}
+price=nifty50$Close
+log_return=diff(log(price),lag=1)
+nifty50=nifty50[-1,]
+nifty50['return']=log_return
+plot(nifty50$return,type="o")
+```
+###Test for Stationarity
+
+```{r}
+adf.test(nifty50$return, alternative = "stationary")
+```
+```{r}
+kpss=kpss.test(nifty50$return)
+kpss
+```
+
+
+```{r}
+pp=PP.test(nifty50$return)
+pp
+```
+```{r}
+par(mfrow=c(1,2))
+y_train=nifty50[1:231,]
+y_test=nifty50[231:250,]
+Acf(y_train$return, lag.max = 40, main='ACF')
+Pacf(y_test$return, lag.max = 40, main = 'PACF')
+tail(y_test$return)
+```
+```{r}
+aic_model=auto.arima(y_train$return,trace=TRUE,d=0,max.p=10,max.q=10,ic="aic",approximation=FALSE)
+aic_model
+```
+```{r}
+bic_model=auto.arima(y_train$return,trace=TRUE,d=0,max.p=10,max.q=10,ic="bic",approximation=FALSE)
+bic_model
+```
+##Forecasting using AIC_model
+```{r}
+fcst=forecast(aic_model,h=20)
+plot(fcst$mean,col='red')
+plot(y_test$Date,y_test$return,type='l',col='blue')
+```
+
+```{r}
+checkresiduals(aic_model)
+```
+###Calculating MAPE
+
+```{r}
+p1 = fcst$mean
+obs1 = y_test$return
+MSE_foreast1 = mean(abs(p1 - obs1))
+MSE_foreast1
+```
+####ARIMA for Nifty midcap50
+```{r}
+rm(list=ls())
+niftymid50=read.csv('nifty midcap50.csv') 
+niftymid50$Date <- as.Date(niftymid50$Date)
+niftymid50$Close=as.numeric(as.character(niftymid50$Close))
+price1=niftymid50$Close
+log_return1=diff(log(price1),lag=1)
+niftymid50=niftymid50[-1,]
+niftymid50['return']=log_return1
+plot(niftymid50$return,type="o")
+```
+
+
+```{r}
+adf.test(niftymid50$return, alternative = "stationary")
+```
+
+```{r}
+par(mfrow=c(1,2))
+y_trainmid=niftymid50[1:231,]
+y_testmid=niftymid50[231:250,]
+Acf(y_trainmid$return, lag.max = 40, main='ACF')
+Pacf(y_trainmid$return, lag.max = 40, main = 'PACF')
+```
+
+```{r}
+best.order = c(0, 0, 0)
+best.aic = Inf
+for (q in 1:10) for (p in 1:10) {
+  fit.model= arima(y_trainmid$return, order = c(p, 0, q), optim.control = list(maxit = 2000) ,method='ML')
+  fit.aic = fit.model$aic
+  if (fit.aic < best.aic) {
+    best.order = c(p, 0, q)
+    best.arima = fit.model
+    best.aic = fit.aic
+  }
+}
+best.order; best.aic
+model.fit = best.arima
+```
+
+
+
+```{r}
+checkresiduals(model.fit, lag.max = 40)
+######Violations of assumption here so ARCH can be fir here
+```
+
+```{r}
+forecast2 = sarima.for(y_trainmid$return, n.ahead =length(y_testmid$return), p=7, d=0, q=4)
+p2 = forecast2$pred
+obs2 = y_testmid$return
+MSE_foreast2 = mean(abs((p2 - obs2)))
+MSE_foreast2
+
+####
+```
+###For nifty small cap
+
+```{r}
+rm(list=ls())
+niftysmall50=read.csv('nifty smallcap50.csv') 
+niftysmall50$Date <- as.Date(niftysmall50$Date)
+niftysmall50$Close=as.numeric(as.character(niftysmall50$Close))
+price1=niftysmall50$Close
+log_return2=diff(log(price1),lag=1)
+niftysmall50=niftysmall50[-1,]
+niftysmall50['return']=log_return2
+plot(niftysmall50$return,type="o")
+```
+```{r}
+adf.test(niftysmall50$return, alternative = "stationary")
+```
+
+```{r}
+par(mfrow=c(1,2))
+y_trainsmall=niftysmall50[1:231,]
+y_testsmall=niftysmall50[231:250,]
+Acf(y_trainsmall$return, lag.max = 40, main='ACF')
+Pacf(y_trainsmall$return, lag.max = 40, main = 'PACF')
+```
+```{r}
+aic_model1=auto.arima(y_trainsmall$return,trace=TRUE,d=0,max.p=10,max.q=10,ic="aic",approximation=FALSE)
+aic_model1
+```
+
+```{r}
+bic_model1=auto.arima(y_trainsmall$return,trace=TRUE,d=0,max.p=10,max.q=10,ic="bic",approximation=FALSE)
+bic_model1
+```
+```{r}
+checkresiduals(aic_model1)
+```
+```{r}
+checkresiduals(bic_model1)
+```
+Taking the aic model because bic model violates the assumptions
+```{r}
+fcst1=forecast(aic_model1,h=20)
+p3 = fcst1$mean
+obs3 = y_testsmall$return
+MSE_foreast3 = mean(abs(p3 - obs3))
+MSE_foreast3
+```
+
