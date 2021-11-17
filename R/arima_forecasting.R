@@ -16,7 +16,8 @@ log_return = diff(log(price), lag=1)
 final = final[-1, ]
 head(final)
 final['return'] = log_return
-plot(final$return, type="o")
+plot(final$return, type="o", col = "blue",xlab="",ylab="",
+     main="Plot of log-return of prices" )
 tail(final)
 y_train<- final[1:245, ]
 tail(y_train)
